@@ -1,0 +1,341 @@
+DROP TYPE DOSTAWA_VARTYP;
+DROP TYPE GOSCIE_OBJTYP;
+DROP TYPE HODOWLA_NTABTYP;
+DROP TYPE HODOWLA_OBJTYP;
+DROP TYPE KSIAZKA_OBJTYP;
+DROP TYPE PILKARZ_OBJTYP;
+DROP TYPE REZERWACJE_NTABTYP;
+DROP TYPE REZERWACJE_OBJTYP;
+DROP TYPE SAMOCHOD_NTABTYP;
+DROP TYPE SAMOCHOD_OBJTYP;
+DROP TYPE SEANS_OBJTYP;
+DROP TYPE SZKOLA_OBJTYP;
+DROP TYPE TELEFON_VARTYP;
+DROP TYPE WLASCICIEL_OBJTYP;
+DROP TYPE WYMAGANIA_NTABTYP;
+DROP TYPE WYMAGANIA_OBJTYP;
+DROP TYPE ZAMOWIENIE_NTABTYP;
+DROP TYPE ZAMOWIENIE_OBJTYP;
+DROP TYPE ZWIERZE_NTABTYP;
+DROP TYPE ZWIERZE_OBJTYP;
+DROP TYPE SZCZEGOL_NTABTYP;
+DROP TYPE SZCZEGOL_OBJTYP;
+DROP TYPE KLUB_OBJTYP;
+DROP TYPE NAJEMCA_OBJTYP;
+DROP TYPE KLASA_NTABTYP;
+DROP TYPE KLASA_OBJTYP;
+DROP TYPE NAUCZYCIEL_OBJTYP;
+DROP TYPE SL_WYMAGANIA_OBJTYP;
+DROP TYPE UCZEN_NTABTYP;
+DROP TYPE UCZEN_OBJTYP;
+DROP TYPE SALA_OBJTYP;
+DROP TYPE OSOBA_OBJTYP;
+DROP TYPE HOTEL_OBJTYP;
+DROP TYPE FILM_OBJTYP;
+DROP TYPE BUDYNEK_HANDLOWY_OBJTYP;
+DROP TYPE BUDYNEK_MIESZKALNY_OBJTYP;
+DROP TYPE BUDYNEK_OBJTYP;
+DROP TYPE ADRES_VARTYP;
+DROP TYPE ADRES_OBJTYP;
+
+--- 1. Utworz obiektowe typy danych
+
+	CREATE OR REPLACE TYPE zwierze_objtyp AS OBJECT
+	(
+	id_z NUMBER(2),
+	nazwa VARCHAR2(10),
+	wiek VARCHAR2(10)
+	);
+	/
+
+	CREATE OR REPLACE TYPE osoba_objtyp AS OBJECT
+	(
+	id_o NUMBER(2),
+	nazwisko VARCHAR2(10),
+	imie VARCHAR2(10),
+	pesel VARCHAR2(11),
+	data_ur DATE
+	);
+	/
+
+	CREATE OR REPLACE TYPE ksiazka_objtyp AS OBJECT
+	(
+	id_k NUMBER(2),
+	tytul VARCHAR2(15),
+	il_str NUMBER(4),
+	isbn VARCHAR2(10),
+	rok_wydania VARCHAR2(4)
+	);
+	/
+
+	CREATE OR REPLACE TYPE szczegol_objtyp AS OBJECT
+	(
+	nazwa VARCHAR2(30),
+	ilosc NUMBER(3),
+	cena NUMBER(12,2)
+	);
+	/
+
+	CREATE OR REPLACE TYPE adres_objtyp AS OBJECT
+	(
+	ulica VARCHAR2(10),
+	nr_domu VARCHAR2(4),
+	nr_mieszkania VARCHAR2(4),
+	miasto VARCHAR2(10),
+	kod VARCHAR2(6)
+	);
+	/
+--- 2. Varray tworzymy, gdy:
+--- - znamy maksymalną liczbę elementów danego typu,
+--- - każdy element ma swój numer, który go identyfikuje,
+--- - na kolekcji wykonywane są operacje w pętli,
+--- - kolekcja bedzie wykorzystywana jako całość.
+--- Natomiast tablice zagnieżdzone, gdy:
+--- - nie znamy maksymalnej liczby elementów danego typu,
+--- - porządek wierszy nie jest okreslony,
+--- - na kolekcji realizowana jest duza liczba zapytan,
+--- - duzo operacji insert/update/delete
+
+--- 3. Utworz typy danych kolekcyjnych - tablice zagniezdzone 
+
+	CREATE OR REPLACE TYPE szczegol_ntabtyp AS TABLE OF szczegol_objtyp;
+	/
+	CREATE OR REPLACE TYPE zwierze_ntabtyp AS TABLE OF zwierze_objtyp;
+	/
+
+--- 4. Utworz typy danych kolekcyjnych - tablice varray
+	CREATE OR REPLACE TYPE telefon_vartyp AS VARRAY(5) OF VARCHAR2(10);
+	/
+	CREATE OR REPLACE TYPE adres_vartyp AS VARRAY(3) OF adres_objtyp;
+	/
+
+
+--- 5. Utworz kolekcyjne wielopoziomowe typy danych
+
+
+	--- A -------------------
+	CREATE OR REPLACE TYPE samochod_objtyp AS OBJECT
+	(
+	marka VARCHAR2(10),
+	kolor VARCHAR2(10)
+	);
+	/
+
+	CREATE OR REPLACE TYPE samochod_ntabtyp AS TABLE OF samochod_objtyp;
+	/
+	CREATE OR REPLACE TYPE dostawa_vartyp AS VARRAY(10) OF samochod_ntabtyp;
+	/
+
+	--- B --------------------
+	CREATE OR REPLACE TYPE zamowienie_objtyp AS OBJECT
+	(
+	id_z NUMBER(2),
+	osoba_obj osoba_objtyp,
+	szczegol_ntab szczegol_ntabtyp
+	);
+	/
+
+	CREATE OR REPLACE TYPE zamowienie_ntabtyp AS TABLE OF zamowienie_objtyp;
+	/
+
+	--- C ---------------------
+	CREATE OR REPLACE TYPE hodowla_objtyp AS OBJECT
+	(
+	id_h NUMBER(2),
+	osoba_obj osoba_objtyp,
+	zwierze_ntab zwierze_ntabtyp
+	);
+	/
+	
+	CREATE OR REPLACE TYPE hodowla_ntabtyp AS TABLE OF hodowla_objtyp;
+	/
+
+
+--- 6. Utworz hierarchiczne typy danych
+--- A -------------------------------
+	CREATE OR REPLACE TYPE budynek_objtyp AS OBJECT
+	(
+	ulica VARCHAR2(10),
+	nr VARCHAR2(4)
+	) NOT FINAL;
+	/
+
+	CREATE OR REPLACE TYPE budynek_mieszkalny_objtyp UNDER budynek_objtyp
+	(
+	opis VARCHAR2(10),
+	il_pieter VARCHAR2(2)
+	) NOT FINAL;
+	/
+
+
+	CREATE OR REPLACE TYPE budynek_handlowy_objtyp UNDER budynek_objtyp
+	(
+	metraz NUMBER(7,2)
+	) NOT FINAL;
+	/
+
+	CREATE OR REPLACE TYPE najemca_objtyp UNDER budynek_mieszkalny_objtyp
+	(
+	osoba_obj osoba_objtyp
+	) NOT FINAL;
+	/
+	
+--- B -------------------------------------
+	Alter TYPE osoba_objtyp NOT FINAL CASCADE;
+	/
+	
+	CREATE OR REPLACE TYPE wlasciciel_objtyp UNDER osoba_objtyp
+	(
+	zwierze_ntab zwierze_ntabtyp,
+	adres_var adres_vartyp
+	) NOT FINAL;
+	/
+
+
+--- 7. Utworz obiektowe typy danych
+
+--- A -----------------
+	CREATE OR REPLACE TYPE klub_objtyp AS OBJECT
+	(
+	id_klub NUMBER(2),
+	nazwa VARCHAR2(10),
+	sponsor VARCHAR2(10),
+	adres_obj adres_objtyp
+	);
+	/
+
+	CREATE OR REPLACE TYPE pilkarz_objtyp AS OBJECT
+	(
+	id_pilkarz NUMBER(2),
+	imie VARCHAR2(10),
+	nazwisko VARCHAR2(10),
+	data_ur DATE,
+	nr_gracza VARCHAR2(2),
+	id_klub_ref REF klub_objtyp
+	);
+	/
+
+--- B -------------------
+	CREATE OR REPLACE TYPE film_objtyp AS OBJECT
+	(
+	id_filmu NUMBER(2),
+	tytul VARCHAR2(10),
+	rezyser VARCHAR2(10),
+	rodzaj VARCHAR2(10),
+	rok_produkcji VARCHAR2(4)
+	);
+	/
+
+	CREATE OR REPLACE TYPE sala_objtyp AS OBJECT
+	(
+	id_sali NUMBER(2),
+	nazwa VARCHAR2(10),
+	il_miejsc NUMBER(3)
+	);
+	/
+
+	CREATE OR REPLACE TYPE seans_objtyp AS OBJECT
+	(
+	id_seansu NUMBER(2),
+	id_sali_ref REF sala_objtyp,
+	id_filmu_ref REF film_objtyp,
+	data_projekcji DATE,
+	godzina_projekcji DATE
+	);
+	/
+
+--- C -------------------
+	CREATE OR REPLACE TYPE nauczyciel_objtyp AS OBJECT
+	(
+	id_nauczyciel NUMBER(2),
+	imie VARCHAR2(10),
+	nazwisko VARCHAR2(10)
+	);
+	/
+	
+	CREATE OR REPLACE TYPE uczen_objtyp AS OBJECT
+	(
+	id_uczen NUMBER(2),
+	nazwisko VARCHAR2(10),
+	imie VARCHAR2(10),
+	adres_obj adres_objtyp
+	);
+	/
+
+	CREATE OR REPLACE TYPE uczen_ntabtyp AS TABLE OF uczen_objtyp;
+	/
+
+	CREATE OR REPLACE TYPE klasa_objtyp AS OBJECT
+	(
+	id_klasy NUMBER(2),
+	nazwa VARCHAR2(10),
+	profil VARCHAR2(10),
+	id_nauczyciel_ref REF nauczyciel_objtyp,
+	rok_rozp VARCHAR2(10),
+	rok_zakon VARCHAR2(10),
+	uczen_ntab uczen_ntabtyp
+	);
+	/
+
+	CREATE OR REPLACE TYPE klasa_ntabtyp AS TABLE OF klasa_objtyp;
+	/
+
+
+	CREATE OR REPLACE TYPE szkola_objtyp AS OBJECT
+	(
+	id_szkola NUMBER(2),
+	nazwa VARCHAR2(10),
+	adres_obj adres_objtyp,
+	klasa_ntab klasa_ntabtyp
+	);
+	/
+	
+	
+--- D ---------------------
+	CREATE OR REPLACE TYPE hotel_objtyp AS OBJECT
+	(
+	id_hotel NUMBER(2),
+	nazwa VARCHAR2(10),
+	adres adres_objtyp
+	);
+	/
+
+	CREATE OR REPLACE TYPE sl_wymagania_objtyp AS OBJECT
+	(
+	id_sl_wym NUMBER(2),
+	nazwa VARCHAR2(10)
+	);
+	/
+
+	CREATE OR REPLACE TYPE wymagania_objtyp AS OBJECT
+	(
+	id_wymagania NUMBER(2),
+	id_sl_wym_ref REF sl_wymagania_objtyp,
+	tn VARCHAR2(1),
+	uwagi VARCHAR2(10)
+	);
+	/
+
+	CREATE OR REPLACE TYPE wymagania_ntabtyp AS TABLE OF wymagania_objtyp;
+	/
+
+	CREATE OR REPLACE TYPE rezerwacje_objtyp AS OBJECT
+	(
+	id_rezerwacji NUMBER(2),
+	data_rez DATE,
+	id_hotel_ref REF hotel_objtyp
+	);
+	/
+
+	CREATE OR REPLACE TYPE rezerwacje_ntabtyp AS TABLE OF rezerwacje_objtyp;
+	/
+
+	CREATE OR REPLACE TYPE goscie_objtyp AS OBJECT
+	(
+	id_gosc NUMBER(2),
+	imie VARCHAR2(10),
+	nazwisko VARCHAR2(10),
+	rezerwacje_ntab rezerwacje_ntabtyp,
+	wymagania_ntab wymagania_ntabtyp
+	);
+	/
