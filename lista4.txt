@@ -1,0 +1,56 @@
+-----------------------------------
+--------- LISTA 4 -----------------
+-----------------------------------
+
+-------- 1 ----------------
+
+select nazwisko, data_ur from osoba_objtab
+ORDER BY nazwisko;
+
+-------- 2 ----------------
+select nazwisko, nazwa  from wlasciciel_objtab, TABLE(zwierze_ntab)
+ORDER BY nazwisko desc, nazwa asc;  
+
+-------- 3 ----------------
+UPDATE TABLE(SELECT w.zwierze_ntab FROM wlasciciel_objtab w WHERE w.ID_O = 2)
+set wiek = '4 mies'
+where id_z = 2 AND wiek like '%m';
+
+-------- 4 ----------------
+DELETE FROM TABLE
+(SELECT w.zwierze_ntab FROM wlasciciel_objtab w WHERE w.ID_O = 1);
+
+-------- 5 ----------------
+UPDATE wlasciciel_objtab
+set zwierze_ntab = null
+where id_o = 2;
+
+-------- 6 ----------------
+UPDATE PILKARZ_OBJTAB
+set ID_KLUB_REF = (SELECT REF(w) FROM klub_objtab w WHERE id_klub=3)
+where id_pilkarz = 2;
+
+-------- 7 ----------------
+select nazwisko, nazwa from PILKARZ_OBJTAB
+join klub_objtab k ON REF(k) = id_klub_ref;
+
+-------- 8 ----------------
+select s.nazwa, f.tytul, data_projekcji from seans_objtab
+join film_objtab f on ref(f) = id_filmu_ref
+join sala_objtab s on ref(s) = id_sali_ref
+ORDER BY s.nazwa desc;
+
+-------- 9 ----------------
+INSERT INTO TABLE(SELECT uczen_ntab FROM TABLE(SELECT klasa_ntab from szkola_objtab where id_szkola = 1) where id_klasy = 2) VALUES(UCZEN_OBJTYP(3,'Qwerty', 'Miroslaw', ADRES_OBJTYP('niebieska', '3', '3', 'Wroclaw', '51-150')));
+
+-------- 10 ---------------
+select s.nazwa, k.nazwa, 0 as liczba from szkola_objtab s, table(s.klasa_ntab) k where s.id_szkola||k.id_klasy not in (select s.id_szkola||k.id_klasy  from szkola_objtab s, table(s.klasa_ntab) k, table(k.uczen_ntab) ucz)
+union
+select s.nazwa, k.nazwa, count(ucz.id_uczen) as liczba from szkola_objtab s, table(s.klasa_ntab) k, table(k.uczen_ntab) ucz
+group by  s.id_szkola, s.nazwa, k.nazwa;
+
+-------- 11 ---------------
+select  g.NAZWISKO, sl_tab.nazwa,w.tn, w.uwagi from goscie_objtab g, table(g.wymagania_ntab) w
+join sl_wymagania_objtab sl_tab on ref(sl_tab) = w.id_sl_wym_ref
+UNION
+select  g.NAZWISKO, TO_CHAR('-') as NAZWA, '-',TO_CHAR('-') as UWAGI from goscie_objtab g where g.id_gosc not in (select g.id_gosc from goscie_objtab g, table(g.wymagania_ntab) w);

@@ -1,0 +1,6 @@
+--- CREATE TABLES ----
+CREATE TABLE dowod (
+	id number(5) NOT NULL PRIMARY KEY,
+	opis varchar(30),
+	data_zebrania date
+);

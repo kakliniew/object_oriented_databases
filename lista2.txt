@@ -1,0 +1,122 @@
+DROP TABLE ksiazka_objtab;
+DROP TABLE pilkarz_objtab;
+DROP TABLE klub_objtab;
+DROP TABLE wlasciciel_objtab;
+DROP TABLE osoba_objtab;
+DROP TABLE seans_objtab;
+DROP TABLE film_objtab;
+DROP TABLE sala_objtab;
+DROP TABLE szkola_objtab;
+DROP TABLE nauczyciel_objtab;
+DROP TABLE goscie_objtab;
+DROP TABLE sl_wymagania_objtab;
+DROP TABLE hotel_objtab;
+
+
+
+--- 1 ----
+--- Utwórz tabele obiektowe. Przećwiczyć różne opcje: z kluczem głównym, bez klucza, z 
+--- referencją, bez referencji, z później dodanym kluczem, referencją itp
+--- A ----
+CREATE TABLE osoba_objtab OF osoba_objtyp (id_o PRIMARY KEY);
+/
+DROP TABLE osoba_objtab;
+/
+
+CREATE TABLE osoba_objtab OF osoba_objtyp;
+/
+DROP TABLE osoba_objtab;
+/
+
+CREATE TABLE osoba_objtab OF osoba_objtyp;
+/
+ALTER TABLE osoba_objtab ADD CONSTRAINT pk_o PRIMARY KEY (id_o);
+/
+
+
+
+--- B ----
+
+CREATE TABLE ksiazka_objtab OF ksiazka_objtyp (id_k PRIMARY KEY);
+/
+DROP TABLE ksiazka_objtab;
+/
+
+CREATE TABLE ksiazka_objtab OF ksiazka_objtyp;
+/
+DROP TABLE ksiazka_objtab;
+/
+
+CREATE TABLE ksiazka_objtab OF ksiazka_objtyp;
+/
+ALTER TABLE ksiazka_objtab ADD CONSTRAINT pk_k PRIMARY KEY (id_k);
+/
+
+
+
+--- C ----
+
+CREATE TABLE wlasciciel_objtab OF wlasciciel_objtyp (id_o PRIMARY KEY)
+NESTED TABLE zwierze_ntab STORE AS ntab_wlasc_zwierz;
+/
+DROP TABLE wlasciciel_objtab;
+/
+
+CREATE TABLE wlasciciel_objtab OF wlasciciel_objtyp
+NESTED TABLE zwierze_ntab STORE AS ntab_wlasc_zwierz;
+/
+DROP TABLE wlasciciel_objtab;
+/
+
+CREATE TABLE wlasciciel_objtab OF wlasciciel_objtyp
+NESTED TABLE zwierze_ntab STORE AS ntab_wlasc_zwierz;
+/
+ALTER TABLE wlasciciel_objtab ADD CONSTRAINT pk_w PRIMARY KEY (id_o);
+/
+
+
+
+---- 2 ----------------
+---- A ----------------
+CREATE TABLE klub_objtab OF klub_objtyp (id_klub PRIMARY KEY);
+/
+
+CREATE TABLE pilkarz_objtab OF pilkarz_objtyp (id_pilkarz PRIMARY KEY,
+FOREIGN KEY (id_klub_ref) REFERENCES klub_objtab);
+/
+
+
+--- B -----
+CREATE TABLE film_objtab OF film_objtyp (id_filmu PRIMARY KEY);
+/
+
+CREATE TABLE sala_objtab OF sala_objtyp (id_sali PRIMARY KEY);
+/
+
+CREATE TABLE seans_objtab OF seans_objtyp (id_seansu PRIMARY KEY, FOREIGN KEY (id_filmu_ref) REFERENCES film_objtab, FOREIGN KEY (id_sali_ref) REFERENCES sala_objtab );
+/
+
+
+--- C -----
+CREATE TABLE nauczyciel_objtab OF nauczyciel_objtyp (id_nauczyciel PRIMARY KEY);
+/
+CREATE TABLE szkola_objtab OF szkola_objtyp (PRIMARY KEY(id_szkola))
+OBJECT IDENTIFIER IS PRIMARY KEY
+NESTED TABLE klasa_ntab STORE AS ntab_szk_kl(
+NESTED TABLE uczen_ntab STORE AS ntab_szk_kl_ucz);
+/
+
+
+--- D -----
+CREATE TABLE hotel_objtab OF hotel_objtyp (id_hotel PRIMARY KEY);
+/
+
+CREATE TABLE sl_wymagania_objtab OF sl_wymagania_objtyp (id_sl_wym PRIMARY KEY);
+/
+
+CREATE TABLE goscie_objtab OF goscie_objtyp (id_gosc PRIMARY KEY)
+NESTED TABLE rezerwacje_ntab STORE AS ntab_gosc_rez((PRIMARY KEY (NESTED_TABLE_ID, id_rezerwacji)))
+NESTED TABLE wymagania_ntab STORE AS ntab_gosc_wym((PRIMARY KEY (NESTED_TABLE_ID, id_wymagania)));
+/
+
+
